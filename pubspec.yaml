@@ -1,7 +1,7 @@
 name: jsony
 description: A lightweight package to easily export and import class members in json format.
-version: 1.0.0
-repository: https://github.com/alierkanimrek/jasony
+version: 1.1.0
+repository: https://github.com/alierkanimrek/jsony
 
 environment:
   sdk: ^3.3.3

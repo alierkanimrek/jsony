@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:jsony/jsony.dart';
+import 'package:jsony/src/jsony_base.dart';
 
 
 
@@ -8,12 +9,16 @@ import 'package:jsony/jsony.dart';
 class Config extends Jsony{
   JsonyString domain = JsonyString("domain", "example.com");
   JsonyInt port = JsonyInt("port", 8080);
-  JsonyStringList mirrors = JsonyStringList("mirrors", ["example2.com", "example3.com"]);
+  JsonyListString mirrors = JsonyListString("mirrors", ["example2.com", "example3.com"]);
   JsonyBool debug = JsonyBool("debug", false);
-  JsonyDynamicList max = JsonyDynamicList("max", ["MB", 2048]);
+  JsonyListDynamic max = JsonyListDynamic("max", ["MB", 2048]);
   DbConfig db = DbConfig("db");
+  JsonyListListString lang = JsonyListListString("lang", [["en", "fr", "tr"], ["English", "Français", "Türkçe"]]);
+  JsonyListJsony team = JsonyListJsony("team", (index){ return Developer(index.toString()); });
 
-  Config(super.name){  jsonTypes([domain,port,mirrors,debug,max,db]);  }
+  List<Developer> get devTeam{ return List<Developer>.from(team()); }
+
+  Config(super.name){  jsonTypes([domain,port,mirrors,debug,max,db, lang, team]);  }
 }
 
 
@@ -26,6 +31,17 @@ class DbConfig extends Jsony{
 }
 
 
+class Developer extends Jsony{
+  JsonyString fullName = JsonyString("fullName");
+  JsonyString email = JsonyString("email");
+  JsonyString profession = JsonyString("profession");
+  JsonyString picUrl = JsonyString("picUrl");
+  JsonyString github = JsonyString("github");
+
+  Developer(super.name){ jsonTypes([fullName,email,profession,picUrl,github]); }
+}
+
+
 
 void main() async{
   File fh = File("config.json");
@@ -33,6 +49,13 @@ void main() async{
   // Create and write to file if not exist.
   Config config = Config("myconfig");
   if(!await fh.exists()) {
+    Developer member = Developer("0");
+    member.fullName.value = "Luke Skywalker";
+    member.email.value = "luke@force.uni";
+    member.profession.value = "Team Leader";
+    member.github.value = "forcebewithyou";
+    member.picUrl.value = "lskywalker.jpg";
+    config.team.elements.add(member);
     fh.writeAsString(config.toJson);
   }
 
@@ -49,6 +72,9 @@ void main() async{
   config.fromJson(jsonString);
 
   print(config.db.uname()); // root
+  print(config.lang()[1][1]); // Français
+  print(config.devTeam[0].fullName()); // Luke Skywalker
+
 
   if(!config.isMatched){
     // Some variables are not in the file, needs update

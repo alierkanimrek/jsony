@@ -13,7 +13,6 @@ Then can export or import all values as an json object in one line.
 ### Have a class contains some configuration values.
 
 ```dart
-
 class Config extends Jsony{
   JsonyString domain = JsonyString("domain", "example.com");
   JsonyInt port = JsonyInt("port", 8080);
@@ -25,6 +24,8 @@ class Config extends Jsony{
 
 ```
 
+
+
 ### Now you can store values in a json file and restore them anytime with a one line operation.
 
 ```dart
@@ -35,27 +36,33 @@ void main() async{
   Config config = Config("myconfig");
 
   // Write to file.
-  fh.writeAsString(config.toJson);
+  fh.writeAsString(config.toJson); 
 
   // Read from file and restore values
   config.fromJson(await fh.readAsString());
 }
 
 ```
+```json
+{
+  "myconfig": {
+    "domain": "example.com",
+    "port": 8080
+  }
+}
+```
+
+
 
 ### Just call the member for access.
 
 ```dart
-
-void main() async{
-  
-  Config config = Config("myconfig");
-  
   print(config.domain()); // example.com
-  config.domain.value = "example.org";
-}
-
+  config.domain.value = "example.org"; // change value
+  fh.writeAsString(config.toJson); // write to file.
 ```
+
+
 
 ### You can declare Jsony objects as a member of other Jsony objects.
 
@@ -86,6 +93,20 @@ void main() async{
 }
 
 ```
+```json
+{"myconfig": {
+    "domain": "example.com",
+    "port": 8080,
+    "db": {
+      "ip": "127.0.0.1",
+      "uname": "admin",
+      "port": 8001
+    }
+  }
+}
+```
+
+
 
 ### Can use Json types.
 
@@ -94,14 +115,31 @@ void main() async{
 class Config extends Jsony{
   JsonyString domain = JsonyString("domain", "example.com");
   JsonyInt port = JsonyInt("port", 8080);
-  JsonyStringList mirrors = JsonyStringList("mirrors", ["example2.com", "example3.com"]);
+  JsonyListString mirrors = JsonyListString("mirrors", ["example2.com", "example3.com"]);
   JsonyBool debug = JsonyBool("debug", false);
-  JsonyDynamicList max = JsonyDynamicList("max", ["MB", 2048]);
+  JsonyListDynamic max = JsonyListDynamic("max", ["MB", 2048]);
 
   Config(super.name){  jsonTypes([domain,port,mirrors,debug,max]);  }
 }
-
 ```
+```json
+{"myconfig": {
+    "domain": "example.com",
+    "port": 8080,
+    "mirrors": [
+      "example2.com",
+      "example3.com"
+    ],
+    "debug": false,
+    "max": [
+      "MB",
+      2048
+    ]
+  }
+}
+```
+
+
 
 ### Check the source need updating
 
@@ -119,5 +157,55 @@ void main() async{
     fh.writeAsString(config.toJson);
   }
 
+}
+```
+
+### List of Jsony Objects
+
+```dart
+class Config extends Jsony {
+  JsonyListJsony team = JsonyListJsony("team", (index) {
+    // It's constructor of list members that runs for every json member by fromJson()
+    // So Jsony doesn't know the runtime type of members
+    return Developer(index.toString());
+  });
+
+  // You should create an helper for access as your class
+  List<Developer> get devTeam {
+    return List<Developer>.from(team());
+  }
+
+  Config(super.name) {
+    jsonTypes([team]);
+  }
+} 
+
+class Developer extends Jsony{
+  JsonyString fullName = JsonyString("fullName");
+  Developer(super.name){ jsonTypes([fullName]); }
+}
+
+void main() async {
+  //some codes
+  
+  print(config.devTeam[0].fullName()); 
+}
+```
+```json
+{ "myconfig": {
+    "team": [
+      {
+        "0": {
+          "fullName": "Luke Skywalker"
+        },
+        "1": {
+          "fullName": "Han Solo"
+        },
+        "2": {
+          "fullName": "Yoda"
+        }
+      }
+    ]
+  }
 }
 ```
